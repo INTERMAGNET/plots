@@ -1,26 +1,70 @@
+/**
+ * @author Charles Blais <charles.blais@canada.ca>
+ * 
+ * Plotting of geomagnetic data
+ */
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { Container, Row, Col } from 'react-bootstrap';
+import moment from 'moment';
 
-function App() {
+import './App.css';
+import GeomagneticForm from './components/GeomagneticForm';
+import GeomagneticPlot from './components/GeomagneticPlot';
+import GeomagneticDetails from './components/GeomagneticDetails';
+
+// Hooks
+import useDataApi from './hooks/useDataApi';
+
+const App = () => {
+  const {
+    data,
+    station,
+    setStation,
+    sampling,
+    setSampling,
+    dataType,
+    setDataType,
+    date,
+    setDate,
+  } = useDataApi({
+    source: 'http://origin1.intermagnet.org/data/',
+    station: 'ott',
+    date: moment(),
+  });
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <Container>
+      <Row>
+        <Col>
+        <GeomagneticForm
+          station={station}
+          setStation={setStation}
+          sampling={sampling}
+          setSampling={setSampling}
+          dataType={dataType}
+          setDataType={setDataType}
+          date={date}
+          setDate={setDate}
+        />
+        </Col>
+      </Row>
+      <Row>
+        <Col>
+        { data.isEmpty
+          ? (
+            <div>Loading...</div>
+          ):(
+            <React.Fragment>
+              <GeomagneticPlot data={data} />
+              <GeomagneticDetails data={data} />
+            </React.Fragment>
+          )
+        }    
+        </Col>
+      </Row>  
+    </Container>
+  )
 }
 
 export default App;
+
