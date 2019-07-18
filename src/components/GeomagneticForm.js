@@ -29,6 +29,18 @@ const GeomagneticForm = (props) => {
           </Form.Group>
         </Col>
         <Col>
+          <Form.Group controlId="formDate">
+            <Form.Label>Date</Form.Label>
+            <Form.Control
+              type="date"
+              value={date.format("YYYY-MM-DD")}
+              onChange={(e) => setDate(moment(e.target.value))}
+            />
+          </Form.Group>
+        </Col>
+      </Form.Row>
+      <Form.Row>
+        <Col>
           <Form.Group controlId="formSampling">
             <Form.Label>Sampling Period</Form.Label>
             <Form.Control
@@ -55,16 +67,6 @@ const GeomagneticForm = (props) => {
               <option>provisional</option>
               <option>variation</option>
             </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group controlId="formDate">
-            <Form.Label>Date</Form.Label>
-            <Form.Control
-              type="date"
-              value={date.format("YYYY-MM-DD")}
-              onChange={(e) => setDate(moment(e.target.value))}
-            />
           </Form.Group>
         </Col>
       </Form.Row>

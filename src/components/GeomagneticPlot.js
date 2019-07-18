@@ -19,31 +19,44 @@ const removeAverage = (component, average) => {
 
 
 const GeomagneticPlot = (props) => {
-  const data = props.data;
+  const {
+    data,
+    components
+  } = props;
 
-  // Calculate the x, y, z average and remove that average
-  const xAvg = getAverage(data.x);
-  const xComp = removeAverage(data.x, xAvg);
-  const xMax = Math.max(...xComp.map(Math.abs));
-  const yAvg = getAverage(data.y);
-  const yComp = removeAverage(data.y, yAvg);
-  const yMax = Math.max(...yComp.map(Math.abs));
-  const zAvg = getAverage(data.z);
-  const zComp = removeAverage(data.z, zAvg);
-  const zMax = Math.max(...zComp.map(Math.abs))
+  const averages = components.map(v => {
+    return getAverage(data[v]);
+  });
 
-  // round up to the nearest 10th for the yragne
-  const yaxisrange = Math.ceil(Math.max(xMax, yMax, zMax)/10.0)*10;
+  const comps = components.map((v, idx) => {
+    return removeAverage(data[v], averages[idx]);
+  });
+
+  const dataPlot = components.map((v, idx) => {
+    return {
+      x: data.datetime,
+      y: comps[idx],
+      xaxis: 'x',
+      yaxis: `y${idx+1}`,
+      type: 'scatter',
+      mode: 'line',
+      name: `${v.toUpperCase()} (${averages[idx].toFixed(2)} nT)`,
+    }
+  });
+
+  const yaxis = components.map((v, idx) => {
+    // round up to the nearest 10th for the yrange
+    const yaxisrange = Math.ceil(Math.max(...comps[idx].map(Math.abs))/10.0)*10;
+    return {
+      title: 'nT',
+      zeroline: false,
+      showdividers: false,
+      range: [-yaxisrange, yaxisrange],
+      fixedrange: true,
+    }
+  });
 
   const title = `${data.meta['Station Name']} (${data.meta['IAGA CODE']})`
-
-  const yaxis = {
-    title: 'nT',
-    zeroline: false,
-    showdividers: false,
-    range: [-yaxisrange, yaxisrange],
-    fixedrange: true,
-  };
 
   return (
     <Plot
@@ -51,41 +64,14 @@ const GeomagneticPlot = (props) => {
         width: "100%",
         height: 600,
       }}
-
-      data={[
-        {
-          x: data.datetime,
-          y: xComp,
-          type: 'scatter',
-          mode: 'line',
-          name: `X (${xAvg.toFixed(2)} nT)`,
-        },
-        {
-          x: data.datetime,
-          y: yComp,
-          xaxis: 'x',
-          yaxis: 'y2',
-          type: 'scatter',
-          mode: 'line',
-          name: `Y (${yAvg.toFixed(2)} nT)`,
-        },
-        {
-          x: data.datetime,
-          y: zComp,
-          xaxis: 'x',
-          yaxis: 'y3',
-          type: 'scatter',
-          mode: 'line',
-          name: `Z (${zAvg.toFixed(2)} nT)`,
-        }
-      ]}
+      data={dataPlot}
       layout={{
-        yaxis,
-        yaxis2: yaxis,
-        yaxis3: yaxis,
+        yaxis: yaxis[0],
+        yaxis2: yaxis[1],
+        yaxis3: yaxis[2],
         title,
         grid: {
-          rows: 3,
+          rows: components.length,
           columns: 1,
           pattern: 'independant',
         },

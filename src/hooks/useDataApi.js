@@ -68,11 +68,20 @@ const buildUrl = (params) => {
       throw new Error("Unknown sampling period");
   }
 
+  // convert data type
+  const dataTypes = (dataType === 'all') ? ['definitive','quasi-definitive','provisional','variation'] : [dataType];
+
   // Convert date to moment if not yet done so
   date = (date instanceof moment) ? date : moment(date);
 
-  const filename = `${station}${date.format("YYYYMMDD")}${dataType.substr(0,1)}${sampling.substr(0,3)}.${sampling.substr(0,3)}`
-  return `${source}/${sampling}/${dataType}/${format}/${date.format("YYYY/MM")}/${filename}`;
+  return dataTypes.map(v => {
+    const filename = `${station}${date.format("YYYYMMDD")}${dataType.substr(0,1)}${sampling.substr(0,3)}.${sampling.substr(0,3)}`;
+    const directory = `${source}/${sampling}/${dataType}/${format}/${date.format("YYYY/MM")}/`;
+    return [
+      `${directory}${filename}.gz`,
+      `${directory}${filename}`
+    ];
+  }).flat();
 };
 
 
@@ -130,13 +139,17 @@ const useDataApi = (initialParams) => {
     let didCancel = false;
     const fetchData = async () => {
       dispatchFetch({ type: FETCH_INIT });
-      try {
-        const url = buildUrl(params)
-        const result = await axios(url);
-        if (!didCancel) {
-          dispatchFetch({ type: FETCH_SUCCESS, payload: libs.parseIAGA2002(result.data) });
+      for (const url of buildUrl(params)) {
+        try {
+          let result = await axios(url);
+          if (!didCancel) {
+            dispatchFetch({ type: FETCH_SUCCESS, payload: libs.parseIAGA2002(result.data) });
+            break;
+          }
+        } catch (error) {
+          continue;
         }
-      } catch (error) {
+        // if we have reach this stage, it means all attempts failed
         if (!didCancel) {
           dispatchFetch({ type: FETCH_FAILURE });
         }

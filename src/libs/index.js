@@ -8,11 +8,11 @@
 class InvalidIAGA2002 extends Error {};
 class MissingComponent extends Error {};
 
-const calcDeclination = (x, y) => Math.atan2(y, x);
-const calcInclination = (h, z) => Math.atan2(z, h);
+const calcDeclination = (x, y) => Math.atan2(y, x) * (180.0 / Math.PI) * 60.0;
+const calcInclination = (h, z) => Math.atan2(z, h) * (180.0 / Math.PI) * 60.0;
 const calcHorizontal = (x, y) => Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-const calcNorth = (h, d) => h * Math.cos(d);
-const calcEast = (h, d) => h * Math.sin(d);
+const calcNorth = (h, d) => h * Math.cos(d * ( Math.PI / 180.0 / 60.0 ));
+const calcEast = (h, d) => h * Math.sin(d * ( Math.PI / 180.0 / 60.0 ));
 
 /**
  * Geomagnetic data handler and response
@@ -49,7 +49,7 @@ class GeomagneticData {
             return this._data.x;
         } else if('h' in this._data && 'd' in this._data) {
             return this._data.h.map((val, idx) => {
-                return calcNorth(val, this._data.d[idx]);
+                return (val !== null && this._data.d[idx] !== null) ? calcNorth(val, this._data.d[idx]) : null;
             });
         }
         throw new MissingComponent("Require x or (h and d) components");
@@ -60,7 +60,7 @@ class GeomagneticData {
             return this._data.y;
         } else if('h' in this._data && 'd' in this._data) {
             return this._data.h.map((val, idx) => {
-                return calcEast(val, this._data.d[idx]);
+                return (val !== null && this._data.d[idx] !== null) ? calcEast(val, this._data.d[idx]) : null;
             });
         }
         throw new MissingComponent("Require y or (h and d) components");
@@ -85,7 +85,7 @@ class GeomagneticData {
             return this._data.d;
         } else if('x' in this._data && 'y' in this._data) {
             return this._data.x.map((val, idx) => {
-                return calcDeclination(val, this._data.y[idx]);
+                return (val !== null && this._data.y[idx] !== null) ? calcDeclination(val, this._data.y[idx]) : null;
             });
         }
         throw new MissingComponent("Require d or (x and y) components");
@@ -95,8 +95,8 @@ class GeomagneticData {
         if ('h' in this._data) {
             return this._data.h;
         } else if('x' in this._data && 'y' in this._data) {
-            return this._data.h.map((val, idx) => {
-                return calcHorizontal(val, this._data.y[idx]);
+            return this._data.x.map((val, idx) => {
+                return (val !== null && this._data.y[idx] !== null) ? calcHorizontal(val, this._data.y[idx]) : null;
             });
         }
         throw new MissingComponent("Require h or (x and y) components");
@@ -107,11 +107,11 @@ class GeomagneticData {
             return this._data['i'];
         } else if('z' in this._data && 'h' in this._data) {
             return this._data.h.map((val, idx) => {
-                return calcInclination(val, this._data.z[idx]);
+                return (val !== null && this._data.z[idx] !== null) ? calcInclination(val, this._data.z[idx]) : null;
             });
         } else if('z' in this._data && 'x' in this._data && 'y' in this._data) {
             return this._data.x.map((val, idx) => {
-                return calcInclination(calcHorizontal(val, this._data.y[idx]), this._data.z[idx]);
+                return (val !== null && this._data.y[idx] !== null && this._data.z[idx] !== null) ? calcInclination(calcHorizontal(val, this._data.y[idx]), this._data.z[idx]) : null;
             });
         }
         throw new MissingComponent("Require i or (z and h) or (z, x, and y) components");

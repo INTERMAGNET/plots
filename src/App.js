@@ -3,7 +3,7 @@
  * 
  * Plotting of geomagnetic data
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import moment from 'moment';
 
@@ -16,6 +16,7 @@ import GeomagneticDetails from './components/GeomagneticDetails';
 import useDataApi from './hooks/useDataApi';
 
 const App = () => {
+  const [ components, setComponents ] = useState(['x','y','z'])
   const {
     data,
     station,
@@ -27,7 +28,7 @@ const App = () => {
     date,
     setDate,
   } = useDataApi({
-    source: 'http://origin1.intermagnet.org/data/',
+    source: 'https://origin1.geomag.nrcan.gc.ca/intermagnet/data/',
     station: 'ott',
     date: moment(),
   });
@@ -45,6 +46,8 @@ const App = () => {
           setDataType={setDataType}
           date={date}
           setDate={setDate}
+          components={components}
+          setComponents={setComponents}
         />
         </Col>
       </Row>
@@ -55,7 +58,10 @@ const App = () => {
             <div>Loading...</div>
           ):(
             <React.Fragment>
-              <GeomagneticPlot data={data} />
+              <GeomagneticPlot
+                data={data}
+                components={components}
+              />
               <GeomagneticDetails data={data} />
             </React.Fragment>
           )
